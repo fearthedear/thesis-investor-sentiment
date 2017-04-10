@@ -1,0 +1,52 @@
+{
+	"verb":"post",
+	"id":"tag:firehose.stocktwits.com:note/79008032",
+	"body":"@Stocktwits Discretionary, swing trend following, know thy equity well and exploit",
+	"actor": {
+		"id":"person:stocktwits:662714",
+		"objectType":"person",
+		"displayName":"cetus76",
+		"preferredUsername":"cetus76",
+		"followersCount":1,
+		"followingCount":31,
+		"followingStocksCount":0,
+		"statusesCount":117,
+		"summary":null,
+		"links": 
+			[ {"href":null,
+			"rel":"me"} ],
+		"link":"http://stocktwits.com/cetus76",
+		"image":"https://avatars.stocktwits.com/production/662714/thumb-1454513680.png",
+		"tradingStrategy": {
+			"assetsFrequentlyTraded":
+				["Equities"],
+			"approach":"Fundamental",
+			"holdingPeriod":"Position Trader",
+			"experience":"Intermediate" 
+		},
+		"classification":[] 
+	},
+	"object": {
+		"id":"note:stocktwits:79008032",
+		"objectType":"note",
+		"postedTime":"2017-04-01T00:00:05Z",
+		"updatedTime":"2017-04-01T00:00:05Z",
+		"summary":"@Stocktwits Discretionary, swing trend following, know thy equity well and exploit",
+		"link":"http://stocktwits.com/cetus76/message/79008032"
+	},
+	"provider": { 
+		"displayName":"StockTwits",			
+		"link":"http://stocktwits.com" 
+	},
+	"link":"http://stocktwits.com/cetus76/message/79008032",
+	"entities": {
+		"symbols":[],
+		"sentiment":null,
+		"chart":null,
+		"video":null },
+	"inReplyTo": {
+		"objectType":"note",
+			"id":"tag:firehose.stocktwits.com:note/78985749" 
+		},
+	"firehose_seq":7918705
+}
