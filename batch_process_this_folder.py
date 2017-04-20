@@ -10,10 +10,10 @@ first_arg = sys.argv[1]
 #virg
 #db = dataset.connect('mysql://'+config.user+":"+config.pw+"@"+config.hostvirg+'/'+config.database)
 #frankfurt
-db = dataset.connect('mysql://'+config.user+":"+config.pw+"@"+config.hostfrank+'/'+config.database)
+#db = dataset.connect('mysql://'+config.user+":"+config.pw+"@"+config.hostfrank+'/'+config.database)
 
 #connect local
-#db = dataset.connect('mysql://root:root@localhost/thesis_test')
+db = dataset.connect('mysql://root:root@localhost/thesis_test')
 
 #open, prepare, parse messages from json
 def openFile(jsonFile):
