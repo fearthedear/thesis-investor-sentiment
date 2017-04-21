@@ -95,6 +95,7 @@ y = rdf['return']
 slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
 print("p-value: "+ str(p_value))
 print("r-squared: "+ str(r_value**2))
+print("slope: " + str(slope))
 
 
 ############
