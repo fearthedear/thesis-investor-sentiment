@@ -4,6 +4,9 @@ import pandas as pd
 import dataset 
 import config
 import yahooDownloader
+from scipy import stats
+from bokeh.plotting import *
+from bokeh.models import *
 
 #frankfurt
 db = dataset.connect('mysql://'+config.user+":"+config.pw+"@"+config.hostfrank+'/'+config.database)
@@ -75,31 +78,32 @@ for i in range(0, len(pdf.index)-4):
 	rdf_list.append((pdf.iloc[i+4]['price']-pdf.iloc[i]['price'])/pdf.iloc[i]['price'])
 
 rdf = pd.DataFrame(rdf_list, columns=['return'])
-print(rdf)
+
 
 ##################
 ### REGRESSION ###
 ##################
 
 #remove last 4 rows from prices df
-print(sdf)
 sdf.drop(sdf.week[48:], inplace=True)
-print(sdf)
+
 x = sdf['percentage_bullish']
 y = rdf['return']
 
-regression = np.polyfit(x, y, 1)
+#regression = np.polyfit(x, y, 1)
+
+slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
+print("p-value: "+ str(p_value))
+print("r-squared: "+ str(r_value**2))
 
 
 ############
 ### PLOT ###
 ############
 
-from bokeh.plotting import *
-from bokeh.models import *
 
 # We need to generate actual values for the regression line.
-r_x, r_y = zip(*((i, i*regression[0] + regression[1]) for i in range(15)))
+r_x, r_y = zip(*((i, i*slope + intercept) for i in range(15)))
 
 p = figure (plot_width=400, plot_height=400)
 output_file("regression.html")
@@ -113,7 +117,3 @@ p.yaxis.axis_label = 'Return'
 p.x_range = Range1d(0, 1)
 p.y_range = Range1d(-1, 1)
 show(p)
-
-
-
-
