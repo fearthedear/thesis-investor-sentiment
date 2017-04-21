@@ -8,7 +8,7 @@ from scipy import stats
 from bokeh.plotting import *
 from bokeh.models import *
 
-#frankfurt
+#connect aws rds frankfurt
 db = dataset.connect('mysql://'+config.user+":"+config.pw+"@"+config.hostfrank+'/'+config.database)
 #connect local
 dblocal = dataset.connect('mysql://root:root@localhost/thesis_test')
@@ -58,7 +58,6 @@ for i in range(0, len(hdDf.index)-1):
 
 #creating table with avg weekly stock price
 db.query("create table temp2 select avg(price) as price, week(date) as week from temp group by week")
-db
 
 result2 = db.query("select week, price from temp2")
 dataset.freeze(result2, format='csv', filename=year+'_'+stock+'_stock_prices.csv')
@@ -104,14 +103,12 @@ print("slope: " + str(slope))
 ############
 
 
-# We need to generate actual values for the regression line.
+# Generate regression line
 r_x, r_y = zip(*((i, i*slope + intercept) for i in range(15)))
 
 p = figure (plot_width=400, plot_height=400)
 output_file("regression.html")
 p.line(r_x, r_y, color="red")
-# Specify that the two graphs should be on the same plot.
-#p.hold(True)
 p.scatter(x, y, marker="square", color="blue")
 #p.title = "Regression "+ stock + " in "+year
 p.xaxis.axis_label = 'Bullish Percentage'
