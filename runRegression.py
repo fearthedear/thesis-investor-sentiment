@@ -84,8 +84,9 @@ rdf = pd.DataFrame(rdf_list, columns=['return'])
 ### REGRESSION ###
 ##################
 
-#remove last 4 rows from prices df
-sdf.drop(sdf.week[48:], inplace=True)
+#get length of return dataframe, set sentiment df to that length
+sdf.drop(sdf.week[len(rdf.index):], inplace=True)
+
 
 x = sdf['percentage_bullish']
 y = rdf['return']
