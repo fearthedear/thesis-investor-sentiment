@@ -8,10 +8,15 @@ from scipy import stats
 from bokeh.plotting import *
 from bokeh.models import *
 
+# suppress mysqldb warnings
+from warnings import filterwarnings
+import MySQLdb as Database
+filterwarnings('ignore', category = Database.Warning)
+
 #connect aws rds frankfurt
 db = dataset.connect('mysql://'+config.user+":"+config.pw+"@"+config.hostfrank+'/'+config.database)
 #connect local
-dblocal = dataset.connect('mysql://root:root@localhost/thesis_test')
+#dblocal = dataset.connect('mysql://root:root@localhost/thesis_test')
 
 #####################
 ### INSERT VALUES ###
