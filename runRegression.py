@@ -95,7 +95,6 @@ sdf.drop(sdf.week[len(rdf.index):], inplace=True)
 x = sdf['percentage_bullish']
 y = rdf['return']
 
-#regression = np.polyfit(x, y, 1)
 
 slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
 print("p-value: "+ str(p_value))
