@@ -34,7 +34,9 @@ timeEnd = ['2016', '12','31']
 
 #select time sentiment is to be aggregated for 
 sentAgg = raw_input("For what time period do you want to aggregate sentiment measure? Monthly or Weekly [M/W] --> ")
+changeOr = raw_input('For the regression, use sentiment weekly change or absolute bullish percentage? ([C]hange/[A]bsolute) --> ')
 monthWeek = 'week' if sentAgg.lower()=='w' else 'month' if sentAgg.lower() == 'm' else 'error'
+change = True if changeOr.lower() == 'c' else False
 
 
 if sentAgg == 'error':
@@ -103,6 +105,16 @@ hdDf = yahooDownloader.download(stock,1,1,2014,31,3,2017)
 #create sentiment dataframe
 sdf = pd.read_csv(str(startY)+str(startMo)+str(startDay)+'-'+str(endY)+str(endMo)+str(endDay)+'_'+stock+'_bullish_percentage.csv')
 
+#add change to sentiment dataframe
+if change:
+	sentimentChange = [0]
+	for i in range(1, len(sdf)):
+		cha = (sdf.iloc[i]['percentage_bullish']-sdf.iloc[i-1]['percentage_bullish'])/sdf.iloc[i-1]['percentage_bullish']
+		sentimentChange.append(cha)
+
+	sentiment_change_series = pd.Series(sentimentChange)
+	sdf['Sentiment_Change'] = sentiment_change_series.values
+
 
 #create return dataframe with same length
 
@@ -169,8 +181,14 @@ else:
 ### REGRESSION ###
 ##################
 
-x = sdf['percentage_bullish']
-y = rdf['Return']
+if change:
+	sdf.drop(sdf.head(1).index, inplace=True)
+	rdf.drop(rdf.head(1).index, inplace=True)
+	x = sdf['Sentiment_Change']
+	y = rdf['Return']
+else:
+	x = sdf['percentage_bullish']
+	y = rdf['Return']
 
 
 slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
@@ -183,15 +201,15 @@ print("slope: " + str(slope))
 ############
 
 # Generate regression line
-r_x, r_y = zip(*((i, i*slope + intercept) for i in range(15)))
+r_x, r_y = zip(*((i, i*slope + intercept) for i in range(-15,15)))
 
 p = figure (plot_width=400, plot_height=400)
 output_file("regression.html")
 p.line(r_x, r_y, color="red")
 p.scatter(x, y, marker="square", color="blue")
 #p.title = "Regression "+ stock + " in "+year
-p.xaxis.axis_label = 'Bullish Percentage'
+p.xaxis.axis_label = 'Sentiment Change' if change else 'Bullish Percentage'
 p.yaxis.axis_label = 'Return'
-p.x_range = Range1d(0, 1)
+p.x_range = Range1d(-0.5, 0.5) if change else Range1d(0,1)
 p.y_range = Range1d(-1, 1)
 show(p)
