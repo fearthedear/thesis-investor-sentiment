@@ -9,6 +9,7 @@ from scipy import stats
 from bokeh.plotting import *
 from bokeh.models import *
 import datetime
+import calendar
 
 # suppress mysqldb warnings
 from warnings import filterwarnings
@@ -40,7 +41,7 @@ if sentAgg == 'error':
 	print('no valid input given')
 	sys.exit()
 #potentially add time for sentiment aggregate: day, week, month
-lag = raw_input("Enter lag for regression --> ")
+lag = raw_input("Enter lag for regression in weeks --> ")
 
 startDay, startMo, startY = timeStart[2], timeStart[1], timeStart[0]
 endDay, endMo, endY = timeEnd[2], timeEnd[1], timeEnd[0]
@@ -111,21 +112,22 @@ if monthWeek == 'month':
 else:
 	rdf = sdf[['week', 'year']].copy()
 
+#pass date, get price, if not trading day, go back a day
+def getPrice(day):
+		try:
+			return hdDf.loc[hdDf.index == str(day.date()), 'Adj Close'].item()
+		except:
+			day2 = day - datetime.timedelta(days=1)
+			return getPrice(day2)
 
 ## add return column, calc returns with lag and insert
 def addReturnWeeklyAgg():
+
 	return_list = []
 	for i in range(0, len(rdf)):
 		#calc return
 		day0 = datetime.datetime.strptime(str(rdf.iloc[i]['year'])+'-'+'W'+str(rdf.iloc[i][monthWeek]) + '-5', "%Y-W%W-%w")
 		day1 = day0 + datetime.timedelta(days=int(lag)*7)
-
-		def getPrice(day):
-			try:
-				return hdDf.loc[hdDf.index == str(day.date()), 'Adj Close'].item()
-			except:
-				day2 = day - datetime.timedelta(days=1)
-				return getPrice(day2)
 		
 		price0 = getPrice(day0)
 		price1 = getPrice(day1)
@@ -138,7 +140,25 @@ def addReturnWeeklyAgg():
 
 
 def addReturnMonthlyAgg():
-	return
+
+	return_list = []
+	for i in range(0, len(rdf)):
+		day_day0 = calendar.monthrange(int(rdf.iloc[i]['year']),int(rdf.iloc[i]['month']))[1]
+		month_day0 = int(rdf.iloc[i]['month'])
+		
+		day0 = datetime.datetime (int(rdf.iloc[i]['year']), month_day0, day_day0)
+		day1 = day0 + datetime.timedelta(days=int(lag)*7)
+
+		price0 = getPrice(day0)
+		price1 = getPrice(day1)
+
+		stockReturn = (price1-price0)/price0
+		return_list.append(stockReturn)
+
+	return_series = pd.Series(return_list)
+	rdf['Return'] = return_series.values
+
+
 
 if monthWeek == 'week':
 	addReturnWeeklyAgg()
