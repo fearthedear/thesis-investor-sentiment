@@ -43,7 +43,7 @@ if sentAgg == 'error':
 	print('no valid input given')
 	sys.exit()
 #potentially add time for sentiment aggregate: day, week, month
-lag = raw_input("Enter lag for regression in weeks --> ")
+lag = raw_input("Enter lag for regression in weeks/months --> ")
 
 startDay, startMo, startY = timeStart[2], timeStart[1], timeStart[0]
 endDay, endMo, endY = timeEnd[2], timeEnd[1], timeEnd[0]
@@ -63,7 +63,7 @@ def getMonthlySentiment():
 		"order by year,month "
 	)
 
-#get bullish percentage, grouped weekl,year
+#get bullish percentage, grouped weekly,year
 def getWeeklySentiment():
 	return db.query( 
 		"select week(time) as week, year(time) as year, avg(sentimentBool) as percentage_bullish "
@@ -96,11 +96,9 @@ dataset.freeze(result, format='csv', filename=str(startY)+str(startMo)+str(start
 #consider just downloading whole years here, filtering later
 hdDf = yahooDownloader.download(stock,1,1,2014,31,3,2017)
 
-
 ##########################
 ### PREPARE REGRESSION ###
 ##########################
-
 
 #create sentiment dataframe
 sdf = pd.read_csv(str(startY)+str(startMo)+str(startDay)+'-'+str(endY)+str(endMo)+str(endDay)+'_'+stock+'_bullish_percentage.csv')
@@ -124,22 +122,23 @@ if monthWeek == 'month':
 else:
 	rdf = sdf[['week', 'year']].copy()
 
-#pass date, get price, if not trading day, go back a day
+#pass date, get price, if not trading day, go forward a day
 def getPrice(day):
 		try:
-			return hdDf.loc[hdDf.index == str(day.date()), 'Adj Close'].item()
+			return hdDf.loc[hdDf.index == str(day.date()), 'Open'].item()
 		except:
-			day2 = day - datetime.timedelta(days=1)
+			day2 = day + datetime.timedelta(days=1)
 			return getPrice(day2)
 
 ## add return column, calc returns with lag and insert
 def addReturnWeeklyAgg():
-
 	return_list = []
 	for i in range(0, len(rdf)):
 		#calc return
-		day0 = datetime.datetime.strptime(str(rdf.iloc[i]['year'])+'-'+'W'+str(rdf.iloc[i][monthWeek]) + '-5', "%Y-W%W-%w")
-		day1 = day0 + datetime.timedelta(days=int(lag)*7)
+		day0 = datetime.datetime.strptime(str(rdf.iloc[i]['year'])+'-'+'W'+str(rdf.iloc[i][monthWeek]) + '-1', "%Y-W%W-%w")
+		if lag > 0:
+			day0 = day0 + datetime.timedelta(days=int(lag)*7)
+		day1 = day0 + datetime.timedelta(days=7)
 		
 		price0 = getPrice(day0)
 		price1 = getPrice(day1)
@@ -155,11 +154,16 @@ def addReturnMonthlyAgg():
 
 	return_list = []
 	for i in range(0, len(rdf)):
-		day_day0 = calendar.monthrange(int(rdf.iloc[i]['year']),int(rdf.iloc[i]['month']))[1]
-		month_day0 = int(rdf.iloc[i]['month'])
-		
-		day0 = datetime.datetime (int(rdf.iloc[i]['year']), month_day0, day_day0)
-		day1 = day0 + datetime.timedelta(days=int(lag)*7)
+		day0_year = int(rdf.iloc[i]['year'])
+		day0_month = int(rdf.iloc[i]['month'])
+		if lag > 0:
+			day0_month += int(lag)
+		if day0_month > 12:
+			day0_year += 1
+			day0_month -= 12
+
+		day0 = datetime.datetime (day0_year, day0_month, 1)
+		day1 = datetime.datetime (int(day0.year), int(day0.month), calendar.monthrange(int(day0.year), int(day0.month))[1] )
 
 		price0 = getPrice(day0)
 		price1 = getPrice(day1)

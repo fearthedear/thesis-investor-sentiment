@@ -24,7 +24,6 @@ def runRegression(symbol, value, aggregated, lag):
 	#connect aws rds frankfurt
 	db = dataset.connect('mysql://'+config.user+":"+config.pw+"@"+config.hostfrank+'/'+config.database)	
 
-
 	######################
 	####### VALUES #######
 	######################
@@ -53,10 +52,10 @@ def runRegression(symbol, value, aggregated, lag):
 			"order by year,month "
 		)
 
-	#get bullish percentage, grouped weekl,year
+	#get bullish percentage, grouped weekly,year
 	def getWeeklySentiment():
 		return db.query( 
-			"select week(time) as week, year(time) as year, avg(sentimentBool) as percentage_bullish "
+			"select week(time,7) as week, year(time) as year, avg(sentimentBool) as percentage_bullish "
 			"from messages_w_sentiment_v2 "
 			"where date(time) between '"+startY+startMo+startDay +"' and '" +endY+endMo+endDay+"'"
 			"and symbol = " + "'"+stock+"' "
@@ -83,9 +82,7 @@ def runRegression(symbol, value, aggregated, lag):
 	### GET STOCK PRICES ###
 	########################
 
-	#consider just downloading whole years here, filtering later
 	hdDf = yahooDownloader.download(stock,1,1,2014,31,3,2017)
-
 
 	##########################
 	### PREPARE REGRESSION ###
@@ -117,20 +114,26 @@ def runRegression(symbol, value, aggregated, lag):
 	#pass date, get price, if not trading day, go back a day
 	def getPrice(day):
 			try:
-				return hdDf.loc[hdDf.index == str(day.date()), 'Adj Close'].item()
+				return hdDf.loc[hdDf.index == str(day.date()), 'Open'].item()
 			except:
-				day2 = day - datetime.timedelta(days=1)
+				day2 = day + datetime.timedelta(days=1)
 				return getPrice(day2)
 
 	## add return column, calc returns with lag and insert
+	## add return column, calc returns with lag and insert
 	def addReturnWeeklyAgg():
-
 		return_list = []
+		day0_list = []
+		day1_list = []
 		for i in range(0, len(rdf)):
 			#calc return
-			day0 = datetime.datetime.strptime(str(rdf.iloc[i]['year'])+'-'+'W'+str(rdf.iloc[i][monthWeek]) + '-5', "%Y-W%W-%w")
-			day1 = day0 + datetime.timedelta(days=int(lag)*7)
+			day0 = datetime.datetime.strptime(str(rdf.iloc[i]['year'])+'-'+'W'+str(rdf.iloc[i][monthWeek]) + '-1', "%Y-W%W-%w")
+			if lag > 0:
+				day0 = day0 + datetime.timedelta(days=int(lag)*7)
+			day1 = day0 + datetime.timedelta(days=7)
 			
+			day0_list.append(day0.day)
+			day1_list.append(day1.day)
 			price0 = getPrice(day0)
 			price1 = getPrice(day1)
 
@@ -138,18 +141,27 @@ def runRegression(symbol, value, aggregated, lag):
 			return_list.append(stockReturn)
 
 		return_series = pd.Series(return_list)
+		day0_series = pd.Series(day0_list)
+		day1_series = pd.Series(day1_list)
 		rdf['Return'] = return_series.values
+		rdf['Day0'] = day0_series.values
+		rdf['Day1'] = day1_series.values
 
 
 	def addReturnMonthlyAgg():
 
 		return_list = []
 		for i in range(0, len(rdf)):
-			day_day0 = calendar.monthrange(int(rdf.iloc[i]['year']),int(rdf.iloc[i]['month']))[1]
-			month_day0 = int(rdf.iloc[i]['month'])
-			
-			day0 = datetime.datetime (int(rdf.iloc[i]['year']), month_day0, day_day0)
-			day1 = day0 + datetime.timedelta(days=int(lag)*7)
+			day0_year = int(rdf.iloc[i]['year'])
+			day0_month = int(rdf.iloc[i]['month'])
+			if lag > 0:
+				day0_month += int(lag)
+			if day0_month > 12:
+				day0_year += 1
+				day0_month -= 12
+
+			day0 = datetime.datetime (day0_year, day0_month, 1)
+			day1 = datetime.datetime (int(day0.year), int(day0.month), calendar.monthrange(int(day0.year), int(day0.month))[1] )
 
 			price0 = getPrice(day0)
 			price1 = getPrice(day1)
@@ -159,7 +171,6 @@ def runRegression(symbol, value, aggregated, lag):
 
 		return_series = pd.Series(return_list)
 		rdf['Return'] = return_series.values
-
 
 
 	if monthWeek == 'week':
@@ -184,7 +195,10 @@ def runRegression(symbol, value, aggregated, lag):
 	slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
 
 	results = { "p-value": p_value, "r-squared": r_value**2, "slope": slope}
-	
+	print(results)
+	pd.options.display.max_rows = 999
+	print(sdf)
+	print(rdf)
 	return results
 
 

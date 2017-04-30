@@ -83,7 +83,6 @@ for i in range(0, len(pdf.index)-4):
 
 rdf = pd.DataFrame(rdf_list, columns=['return'])
 
-
 ##################
 ### REGRESSION ###
 ##################
