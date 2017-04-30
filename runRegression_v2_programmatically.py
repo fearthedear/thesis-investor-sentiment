@@ -192,13 +192,11 @@ def runRegression(symbol, value, aggregated, lag):
 		y = rdf['Return']
 
 
+	print(x)
+	print(y)
 	slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
 
 	results = { "p-value": p_value, "r-squared": r_value**2, "slope": slope}
-	print(results)
-	pd.options.display.max_rows = 999
-	print(sdf)
-	print(rdf)
 	return results
 
 
