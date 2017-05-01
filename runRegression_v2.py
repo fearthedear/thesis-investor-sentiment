@@ -196,9 +196,9 @@ else:
 
 
 slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
-print("p-value: "+ str(p_value))
-print("r-squared: "+ str(r_value**2))
-print("slope: " + str(slope))
+pvalue = "p-value: "+ str(p_value)
+rsquared = "r-squared: "+ str(r_value**2)
+slopep = "slope: " + str(slope)
 
 ############
 ### PLOT ###
@@ -211,9 +211,12 @@ p = figure (plot_width=400, plot_height=400)
 output_file("regression.html")
 p.line(r_x, r_y, color="red")
 p.scatter(x, y, marker="square", color="blue")
-#p.title = "Regression "+ stock + " in "+year
+p.title.text = stock
+p.title.align = "center"
+p.title.text_font_size = "25px"
 p.xaxis.axis_label = 'Sentiment Change' if change else 'Bullish Percentage'
 p.yaxis.axis_label = 'Return'
-p.x_range = Range1d(-0.5, 0.5) if change else Range1d(0,1)
-p.y_range = Range1d(-1, 1)
+p.add_layout(Title(text=pvalue, align="center"), "below")
+p.x_range = Range1d(x.min(), x.max()) if change else Range1d(0,1)
+p.y_range = Range1d(-0.2, 0.2)
 show(p)

@@ -43,7 +43,6 @@ def make_plot(stock):
 
 	kw = lambda x: x.isocalendar()[1]
 	kw_year = lambda x: str(x.year) + ' - ' + str(x.isocalendar()[1])
-	#grouped = vdf.groupby([vdf['date'].map(kw)], sort=False).agg({'Volume': 'sum'})
 	grouped = vdf.groupby([vdf['date'].map(kw_year)], sort=False).agg({'Volume': 'sum'})
 
 	mvdf = mvdf[:-1]
